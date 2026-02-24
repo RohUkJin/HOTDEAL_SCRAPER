@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+.idea/
+.vscode/
+cache.json
+last_run_result.json
+scheduler.log
