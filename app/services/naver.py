@@ -7,10 +7,10 @@ class NaverSearchService:
     BASE_URL = "https://openapi.naver.com/v1/search/shop.json"
 
     @staticmethod
-    async def search_lowest_price(query: str) -> Optional[int]:
+    async def search_lowest_price(query: str) -> Optional[dict]:
         """
         Search for the lowest price (lprice) of a product on Naver Shopping.
-        Returns the integer price or None if failed/not found.
+        Returns a dict with 'price' and 'title' or None if failed/not found.
         """
         if not settings.NAVER_CLIENT_ID or not settings.NAVER_CLIENT_SECRET:
             logger.warning("Naver API credentials not set. Skipping price comparison.")
@@ -43,7 +43,11 @@ class NaverSearchService:
                 
                 # Get the first item's lowest price
                 lprice = items[0].get("lprice")
-                return int(lprice) if lprice else None
+                title = items[0].get("title", "").replace("<b>", "").replace("</b>", "")
+                
+                if lprice:
+                    return {"price": int(lprice), "title": title}
+                return None
                 
         except Exception as e:
             logger.error(f"Error searching Naver for '{query}': {e}")

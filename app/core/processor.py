@@ -181,6 +181,31 @@ class Processor:
         return None
 
     @staticmethod
+    def clean_title_for_search(title: str) -> str:
+        """Removes marketing terms in brackets/parentheses at the beginning for Naver search."""
+        import re
+        # Remove any prefix combinations of (), [], {}, <>
+        clean = re.sub(r"^(\s*[\[\(<\{][^\]\)>\}]+[\]\)>\}])+\s*", "", title)
+        return clean.strip() or title
+
+    @staticmethod
+    def extract_quantity(text: str) -> int:
+        """Extracts total quantity from title like '12병', '30롤 2팩'."""
+        import re
+        pattern = r"(\d+)\s*(병|롤|팩|개|매|캔|정|포|구|박스|봉|입|페트|pet|번|묶음|포기)"
+        matches = re.findall(pattern, text.lower())
+        
+        if not matches:
+            return 1
+            
+        total_qty = 1
+        for match in matches:
+            qty = int(match[0])
+            total_qty *= qty
+            
+        return min(total_qty, 10000)
+
+    @staticmethod
     def _apply_hard_filter(deal: Deal) -> bool:
         """Returns True if deal should be DROPPED"""
         
@@ -301,24 +326,53 @@ class Processor:
                     deal_price = int(price_str)
             
             if deal_price:
-                naver_price = await NaverSearchService.search_lowest_price(deal.title)
-                if naver_price:
+                # 1. Clean Title for Search
+                search_query = Processor.clean_title_for_search(deal.title)
+                
+                naver_result = await NaverSearchService.search_lowest_price(search_query)
+                if naver_result:
+                    naver_price = naver_result["price"]
+                    naver_title = naver_result["title"]
                     deal.naver_price = naver_price # Store for LLM context
                     
-                    # 1. Strict Filter: Drop if expensive
-                    if deal_price > naver_price:
+                    # 2. Extract Quantities
+                    deal_qty = Processor.extract_quantity(deal.title)
+                    naver_qty = Processor.extract_quantity(naver_title)
+                    
+                    # 3. Consider Shipping Fees
+                    deal_shipping = 0 if any(kw in deal.title for kw in ("무배", "무료배송", "배송비 무료")) else 3000
+                    naver_shipping = 3000
+                    
+                    total_deal_cost = deal_price + deal_shipping
+                    total_naver_cost = naver_price + naver_shipping
+                    
+                    # 4. Calculate Unit Prices
+                    deal_unit_price = total_deal_cost / deal_qty
+                    naver_unit_price = total_naver_cost / naver_qty
+                    
+                    # 5. Strict Filter: Drop if expensive per unit
+                    if deal_unit_price > naver_unit_price:
                          deal.status = "DROP"
-                         deal.reason = f"Expensive than Naver ({deal_price} > {naver_price})"
+                         deal.reason = f"Expensive than Naver Unit Price ({deal_unit_price:.1f} > {naver_unit_price:.1f})"
                          logger.info(f"Dropped {deal.title} ({deal.reason})")
                          return # Stop scoring
                     
-                    # 2. Calculate Savings
-                    deal.savings = naver_price - deal_price
+                    # 6. Calculate Savings
+                    deal.savings = int((naver_unit_price - deal_unit_price) * deal_qty)
                     
-                    ratio = deal_price / naver_price
+                    ratio = deal_unit_price / naver_unit_price
+                    # Bonus 1: Ratio
                     if ratio < 0.85: # 15% cheaper
                         score += 3
-                        logger.info(f"Naver Price Bonus for {deal.title}: {deal_price} vs {naver_price} ({ratio:.2f})")
+                        logger.info(f"Naver Price Bonus for {deal.title}: {deal_unit_price:.1f} vs {naver_unit_price:.1f} ({ratio:.2f}) -> +3")
+                    elif ratio < 0.90: # 10% cheaper
+                        score += 2
+                        logger.info(f"Naver Price Bonus for {deal.title}: {deal_unit_price:.1f} vs {naver_unit_price:.1f} ({ratio:.2f}) -> +2")
+                    
+                    # Bonus 2: Total Savings amount
+                    if deal.savings > 30000:
+                        score += 2
+                        logger.info(f"Naver Huge Savings Bonus for {deal.title}: {deal.savings} KRW -> +2")
         except Exception as e:
             logger.warning(f"Naver check failed: {e}")
                 

@@ -59,7 +59,7 @@ class Analyzer:
         1. HOT: 
            - Item is a DAILY NECESSITY (Food, Drink, Toiletries, Office, Others) OR useful general goods (Electronics, Small Appliances, Home Goods, Health Supplements).
            - **Important**: Clothes, Games, Luxury Items, and Coupons are still generally DROP, unless they are exceptionally cheap and widely applicable.
-           - Price is cheap (verified by 'Savings' > 0 OR user comments like "cheap", "good price"). Even if there are few or no comments, if the 'Savings' are clearly positive, consider it a HOT deal.
+           - Price is cheap (verified by 'Savings' > 0 OR user comments like "cheap", "good price"). The 'Savings' value is already unit-price adjusted and considers shipping. Even if there are few or no comments, if the 'Savings' are clearly positive, consider it a HOT deal.
            - User sentiment is POSITIVE or NEUTRAL. Lack of comments does not disqualify a deal if the price is good.
         2. DROP: 
            - Highly specific niche items (e.g., specific game titles, high-end luxury fashion, obscure components).
