@@ -1,6 +1,4 @@
-# AI 기반 커뮤니티 핫딜 분석 시스템
-
-커뮤니티 핫딜 게시판을 크롤링하여 불필요한 항목을 필터링하고, AI를 활용해 회사 비품 구매에 적합한 "생필품(Daily Necessities)" 핫딜을 자동으로 식별하는 시스템입니다.
+# 커뮤니티의 핫딜 정보를 주기적으로 크롤링 및 LLM 기반의 필터링 엔진
 
 ## 1. 데이터 소스 및 수집 범위
 - **타겟 사이트**:
@@ -77,7 +75,13 @@ graph TD
     -   `hotdeals`: 핫딜 정보 (AI 분석 데이터 포함).
     -   `crawl_stats`: 매 실행 시 수집/필터/저장 수치 및 **총 절약 금액(Total Savings)** 기록.
     -   **신고 시스템**: `report_count` 컬럼을 통해 프론트엔드 유저 신고 반영.
--   **스케줄러**: GitHub Actions를 통해 **매일 00:00, 12:00 KST**에 자동 실행됩니다.
+-   **스케줄러**: GitHub Actions를 통해 **매일 00:00, 12:00 KST**에 자동 실행됩니다. (`cron: '0 3,15 * * *'`)
+
+## 4. 환경 변수 (Secrets)
+실행을 위해 GitHub Actions Secrets 또는 로컬 `.env` 파일에 다음 키가 필요합니다:
+- `GEMINI_API_KEY`: Google Gemini 데이터 분석용
+- `SUPABASE_URL` / `SUPABASE_KEY`: 데이터베이스 저장용
+- `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET`: 네이버쇼핑 최저가 검색(API) 가격 검증용
 
 ## 4. 프로젝트 구조
 ```bash
