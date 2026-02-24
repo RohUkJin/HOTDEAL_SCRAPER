@@ -20,19 +20,19 @@ AI 비용 절감을 위해 3단계 깔때기(Funnel) 아키텍처를 사용합�
 
 ```mermaid
 graph TD
-    A[Raw Data Collection] -->|600+ Items| B(Hard Filter)
-    B -->|Rules (Keywords/Comments)| C(Soft Scoring)
-    C -->|Price Check (Naver API)| D{Score >= Threshold?}
-    D -- No --> E[Drop (Cost $0)]
-    D -- Yes --> F[AI Analysis]
+    A["Raw Data Collection"] -->|"600+ Items"| B("Hard Filter")
+    B -->|"Rules (Keywords/Comments)"| C("Soft Scoring")
+    C -->|"Price Check (Naver API)"| D{"Score >= Threshold?"}
+    D -- "No" --> E["Drop (Cost $0)"]
+    D -- "Yes" --> F["AI Analysis"]
     
     subgraph Core AI Logic
-    F -->|Batch Request| G[Gemini 2.5 LLM]
-    G -->|Context + Sentiment| H{Is Hotdeal?}
+    F -->|"Batch Request"| G["Gemini 3 Flash Preview"]
+    G -->|"Context + Sentiment"| H{"Is Hotdeal?"}
     end
     
-    H -- Yes --> I[DB Save (HOT)]
-    H -- No --> E
+    H -- "Yes" --> I["DB Save (HOT)"]
+    H -- "No" --> E
 ```
 
 ### 1단계: 하드 필터 (Hard Filter) - 규칙 기반 즉시 삭제
