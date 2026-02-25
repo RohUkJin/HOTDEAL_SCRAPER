@@ -14,6 +14,7 @@ class BatchAnalysisResult(BaseModel):
     category: str
     reason: str # Curated summary
     sentiment: int # 0-100
+    embed_text: str # For vector embedding
 
 class BatchResponse(BaseModel):
     results: List[BatchAnalysisResult]
@@ -85,6 +86,7 @@ class Analyzer:
                     "category": "string (MUST BE ONE OF: Food, Drink, Toiletries, Office, Others)",
                     "reason": "string (3-line CURATED summary in Korean. Tone: Shopping Host. Use emojis sparingly (max 1 per line).)",
                     "sentiment": integer (0 to 100, based on User Reactions. <30 if viral suspected)",
+                    "embed_text": "string (Vector search context. Format: [Category] Product Name / Key Features (e.g., 역대가, 무배) / Target Audience. MUST be NOUNS ONLY. NO polite words like '안녕하세요', '추천합니다'. NO particles like '은/는/이/가/의'. Space-separated.)"
                 }}
             ]
         }}
@@ -116,6 +118,7 @@ class Analyzer:
 
                     deal.ai_summary = res.get("reason", "")
                     deal.sentiment_score = res.get("sentiment", 50)
+                    deal.embed_text = res.get("embed_text", "")
                     
                     if deal.is_hotdeal:
                         deal.status = "HOT"
@@ -127,6 +130,7 @@ class Analyzer:
                     deal.category = Category.DROP
                     deal.ai_summary = "AI 판단: 필터링 조건 미달 (DROP)"
                     deal.sentiment_score = 0
+                    deal.embed_text = ""
                     deal.status = "DROP"
                     
             logger.info(f"Batch analysis complete for {len(deals)} items. LLM returned {len(result_list)} items.")

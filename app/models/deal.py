@@ -19,6 +19,7 @@ class Deal(BaseModel):
     comments: List[str] = Field(default_factory=list) # Comment contents
     is_hotdeal: Optional[bool] = None
     category: Optional[Category] = None
+    embed_text: Optional[str] = None
     
     # Analysis Fields
     score: float = 0.0

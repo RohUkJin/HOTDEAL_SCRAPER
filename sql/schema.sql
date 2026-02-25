@@ -15,6 +15,7 @@ create table public.hotdeals (
   is_hotdeal boolean,
   why_hotdeal text,
   category text,
+  embed_text text,
   created_at timestamptz default now(),
   constraint hotdeals_pkey primary key (id, source)
 );
