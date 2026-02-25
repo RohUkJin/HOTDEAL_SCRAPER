@@ -25,6 +25,7 @@ class Analyzer:
             self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
             self.model_name = "gemini-3-flash-preview"
             self.fallback_model_name = "gemini-2.0-flash"
+            self.embedding_model = "text-embedding-004"
         except Exception as e:
             logger.error(f"Failed to initialize Gemini: {e}")
             self.client = None
@@ -146,6 +147,12 @@ class Analyzer:
                 if deal.status == "READY": 
                     deal.status = "ERROR"
             
+        # Generate embeddings for successful hot deals
+        try:
+            self._generate_embeddings(deals)
+        except Exception as e:
+            logger.error(f"Error generating embeddings: {e}")
+            
         return deals
 
     def _generate_with_fallback(self, prompt: str):
@@ -184,3 +191,30 @@ class Analyzer:
             raise e
             
         return None
+
+    def _generate_embeddings(self, deals: List[Deal]):
+        """Generates vector embeddings for hot deals."""
+        hotdeals_to_embed = [d for d in deals if d.is_hotdeal and d.embed_text]
+        if not hotdeals_to_embed or not self.client:
+            return
+
+        try:
+            logger.info(f"Generating embeddings for {len(hotdeals_to_embed)} hot deals using {self.embedding_model}...")
+            texts = [d.embed_text for d in hotdeals_to_embed]
+            
+            response = self.client.models.embed_content(
+                model=self.embedding_model,
+                contents=texts,
+                config=types.EmbedContentConfig(
+                    task_type="RETRIEVAL_DOCUMENT"
+                )
+            )
+            
+            # Map embeddings back to deals
+            for i, deal in enumerate(hotdeals_to_embed):
+                deal.embedding = response.embeddings[i].values
+                
+            logger.info("Successfully generated and assigned embeddings.")
+        except Exception as e:
+            logger.error(f"Failed to generate embeddings: {e}")
+            raise e

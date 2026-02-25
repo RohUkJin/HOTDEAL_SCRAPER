@@ -20,6 +20,7 @@ class Deal(BaseModel):
     is_hotdeal: Optional[bool] = None
     category: Optional[Category] = None
     embed_text: Optional[str] = None
+    embedding: Optional[List[float]] = None
     
     # Analysis Fields
     score: float = 0.0

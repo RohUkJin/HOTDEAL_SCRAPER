@@ -38,6 +38,7 @@ class Database:
                 "is_hotdeal": deal.is_hotdeal,
                 "category": str(deal.category) if deal.category else None,
                 "embed_text": deal.embed_text,
+                "embedding": deal.embedding,
                 "naver_price": deal.naver_price,
                 "savings": deal.savings,
                 "score": deal.score,
