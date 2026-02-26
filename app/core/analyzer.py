@@ -25,7 +25,7 @@ class Analyzer:
             self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
             self.model_name = "gemini-3-flash-preview"
             self.fallback_model_name = "gemini-2.0-flash"
-            self.embedding_model = "text-embedding-004"
+            self.embedding_model = "gemini-embedding-001"
         except Exception as e:
             logger.error(f"Failed to initialize Gemini: {e}")
             self.client = None
@@ -206,7 +206,8 @@ class Analyzer:
                 model=self.embedding_model,
                 contents=texts,
                 config=types.EmbedContentConfig(
-                    task_type="RETRIEVAL_DOCUMENT"
+                    task_type="RETRIEVAL_DOCUMENT",
+                    output_dimensionality=768
                 )
             )
             
