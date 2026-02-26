@@ -1,8 +1,8 @@
 
 import asyncio
 from playwright.async_api import async_playwright
-from app.crawlers.arca import ArcaCrawler
-from app.crawlers.fmkorea import FMKoreaCrawler
+from app.crawlers.community_3 import ArcaCrawler
+from app.crawlers.community_2 import FMKoreaCrawler
 from app.core.processor import Processor
 
 async def debug_crawlers():

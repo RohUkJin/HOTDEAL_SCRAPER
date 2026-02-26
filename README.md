@@ -96,7 +96,7 @@ graph TD
 .
 ├── app/                  # 핵심 애플리케이션 코드
 │   ├── core/             # 분석기(Analyzer), DB, 설정 등 공통 로직
-│   ├── crawlers/         # 사이트별 크롤러 (Ppomppu, FMKorea, Arca)
+│   ├── crawlers/         # 사이트별 크롤러 (community_1, community_2, community_3)
 │   └── models/           # 데이터 모델 (Deal)
 ├── sql/                  # DB 스키마 및 마이그레이션 SQL 파일들
 ├── .github/workflows/    # 자동화 스케줄 설정 (daily_crawl.yml)

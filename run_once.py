@@ -1,9 +1,9 @@
 import asyncio
 import logging
 from playwright.async_api import async_playwright
-from app.crawlers.ppomppu import PpomppuCrawler
-from app.crawlers.arca import ArcaCrawler
-from app.crawlers.fmkorea import FMKoreaCrawler
+from app.crawlers.community_1 import PpomppuCrawler
+from app.crawlers.community_3 import ArcaCrawler
+from app.crawlers.community_2 import FMKoreaCrawler
 from app.core.processor import Processor
 from app.core.analyzer import Analyzer
 from app.core.database import db
