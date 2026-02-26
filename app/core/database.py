@@ -29,7 +29,6 @@ class Database:
                 "source": deal.source,
                 "title": deal.title,
                 "link": deal.link,
-                "original_price": deal.original_price,
                 "discount_price": deal.discount_price,
                 "posted_at": deal.posted_at.isoformat() if deal.posted_at else None,
                 "votes": deal.votes,
@@ -44,7 +43,6 @@ class Database:
                 "score": deal.score,
                 "status": deal.status,
                 "comments": deal.comments,
-                "why_hotdeal": deal.reason,
                 "ai_summary": deal.ai_summary,
                 "sentiment_score": deal.sentiment_score
             }

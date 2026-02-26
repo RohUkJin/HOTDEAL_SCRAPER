@@ -8,7 +8,6 @@ class Deal(BaseModel):
     source: str = Field(..., description="Source community name (e.g., Ppomppu, Clien)")
     title: str
     link: str
-    original_price: Optional[str] = None
     discount_price: Optional[str] = None
     posted_at: datetime
     votes: int = 0
@@ -23,7 +22,7 @@ class Deal(BaseModel):
     embedding: Optional[List[float]] = None
     
     # Analysis Fields
-    score: float = 0.0
+    score: float = 0.0 
     status: str = Field("READY", description="READY, HOT, MAYBE, DROP")
     reason: Optional[str] = None # For Hard Filter drop reason
     ai_summary: Optional[str] = None # One-line summary of AI reasoning
