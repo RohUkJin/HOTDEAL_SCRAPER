@@ -188,8 +188,10 @@ class FMKoreaCrawler(BaseCrawler):
             content_el = page.locator(".xe_content").first
             if await content_el.count():
                 img_el = content_el.locator("img").first
-                if await img_el.count():
-                     deal.image_url = await img_el.get_attribute("src")
+                # The image URL will no longer be extracted and assigned to deal.image_url
+                # The previous code was:
+                # if await img_el.count():
+                #      deal.image_url = await img_el.get_attribute("src")
 
         except Exception as e:
             logger.error(f"Error checking detail for {deal.title}: {e}")

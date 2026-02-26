@@ -175,7 +175,7 @@ class ArcaCrawler(BaseCrawler):
             # Image
             img_el = page.locator(".article-content img").first
             if await img_el.count():
-                deal.image_url = await img_el.get_attribute("src")
+                pass # Extracted but unused
 
         except Exception as e:
             logger.error(f"Error checking detail for {deal.title}: {e}")

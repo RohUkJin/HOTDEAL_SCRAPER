@@ -173,9 +173,9 @@ class PpomppuCrawler(BaseCrawler):
             # Try to find content area first
             content_el = page.locator(".board-contents").or_(page.locator(".view_content")).first
             if await content_el.count():
-                img_el = content_el.locator("img").first
-                if await img_el.count():
-                    deal.image_url = await img_el.get_attribute("src")
+                img_el = await page.query_selector(".board-contents img") # Corrected from detail_page to page
+            if img_el:
+                pass # Image extracted but unused
                 
         except Exception as e:
             logger.error(f"Error crawling detail for {deal.link}: {e}")

@@ -14,7 +14,6 @@ class Deal(BaseModel):
     comment_count: int = 0
     naver_price: Optional[int] = None
     savings: Optional[int] = None # Naver Price - Discount Price
-    image_url: Optional[str] = None
     comments: List[str] = Field(default_factory=list) # Comment contents
     is_hotdeal: Optional[bool] = None
     category: Optional[Category] = None

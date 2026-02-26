@@ -10,7 +10,6 @@ create table public.hotdeals (
   posted_at timestamptz not null,
   votes int default 0,
   comment_count int default 0,
-  image_url text,
   is_hotdeal boolean,
   category text,
   embed_text text,

@@ -33,7 +33,6 @@ class Database:
                 "posted_at": deal.posted_at.isoformat() if deal.posted_at else None,
                 "votes": deal.votes,
                 "comment_count": deal.comment_count,
-                "image_url": deal.image_url,
                 "is_hotdeal": deal.is_hotdeal,
                 "category": str(deal.category) if deal.category else None,
                 "embed_text": deal.embed_text,
