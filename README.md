@@ -27,9 +27,10 @@ graph TD
     subgraph Core AI Logic
     F -->|"Batch Request"| G["Gemini 3 Flash Preview"]
     G -->|"Context + Sentiment"| H{"Is Hotdeal?"}
+    H -- "Yes" --> V["Vector Embedding (gemini-embedding-001)"]
     end
     
-    H -- "Yes" --> I["DB Save (HOT)"]
+    V --> I["DB Save (HOT + 768 Vector)"]
     H -- "No" --> E
 ```
 
@@ -73,11 +74,13 @@ graph TD
     - `AI Summary`: **쇼핑 호스트 톤**의 3줄 요약 큐레이션 (예: "📢 역대급 가격! 놓치면 후회할 구성입니다.")
     - `Sentiment Score`: 댓글 반응 기반 **0~100점** 감성 점수.
     - `Category`: 분류된 카테고리 태그. 태그되지 않은(명단에 없는) 상품은 자동으로 탈락(DROP) 처리됩니다.
+    - `Embedding`: **의미 기반 AI 검색(Semantic Search)**을 지원하기 위한 768차원 모델(`gemini-embedding-001`) 벡터 데이터 추출 및 DB 연동.
 
 ## 3. 저장 및 출력 시스템
 -   **스마트 캐싱**: `hash(제목 + 링크)`를 키로 사용하되, **날짜(Date)**가 변경되면 캐시를 만료시켜 매일 새로운 딜을 놓치지 않고 수집합니다.
 -   **DB 저장 (Supabase)**:
-    -   `hotdeals`: 핫딜 정보 (AI 분석 데이터 포함).
+    -   `hotdeals`: 핫딜 정보 및 **AI 분석 데이터(감성 점수, 카테고리 등)**.
+    -   `pgvector` 통합 (Vector Search): 의미적 맥락(Semantic context) 768차원 배열 벡터 공간에 데이터를 밀어넣어 프론트엔드 자연어 검색에 대응.
     -   `crawl_stats`: 매 실행 시 수집/필터/저장 수치 및 **총 절약 금액(Total Savings)** 기록.
     -   **신고 시스템**: `report_count` 컬럼을 통해 프론트엔드 유저 신고 반영.
 -   **스케줄러**: GitHub Actions를 통해 **매일 00:00, 12:00 KST**에 자동 실행됩니다. (`cron: '0 3,15 * * *'`)
