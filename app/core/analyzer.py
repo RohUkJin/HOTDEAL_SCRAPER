@@ -71,9 +71,10 @@ class Analyzer:
                - **Important**: Clothes, Games, Luxury Items, and Coupons are still generally DROP, unless they are exceptionally cheap and widely applicable.
                - Price is cheap (verified by 'Savings' > 0 OR user comments like "cheap", "good price"). The 'Savings' value is already unit-price adjusted and considers shipping. Even if there are few or no comments, if the 'Savings' are clearly positive, consider it a HOT deal.
                - User sentiment is POSITIVE or NEUTRAL. Lack of comments does not disqualify a deal if the price is good.
+               - **OFFICE EXCEPTION**: For "Office" (사무용품, 문구류) items, apply very lenient criteria. As long as it is an office supply and not heavily criticized or a clear scam, classify it as HOT, even if 'Savings' are minimal or 0.
             2. DROP: 
                - Highly specific niche items (e.g., specific game titles, high-end luxury fashion, obscure components).
-               - Price is NOT competitive (Savings <= 0 AND users say "expensive").
+               - Price is NOT competitive (Savings <= 0 AND users say "expensive") -- EXCEPT for Office items.
                - User sentiment is predominantly NEGATIVE (e.g., "don't buy", "not a deal").
                - **VIRAL/AD WARNING**: If comments strongly complain about "바이럴", "광고", "업자", "비추", Sentiment Score MUST be < 30.
             3. MAYBE: Ambiguous cases.
