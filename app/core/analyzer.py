@@ -36,10 +36,11 @@ class Analyzer:
             return deals
 
         import time
-        CHUNK_SIZE = 7
+        CHUNK_SIZE = 5
         
         # Process in chunks to avoid overwhelming the model (503 High Demand / 429 Errors)
         for i in range(0, len(deals), CHUNK_SIZE):
+            response = None
             chunk_deals = deals[i:i + CHUNK_SIZE]
             logger.info(f"Processing chunk {i // CHUNK_SIZE + 1}/{(len(deals) + CHUNK_SIZE - 1) // CHUNK_SIZE} ({len(chunk_deals)} items)")
             
@@ -148,7 +149,7 @@ class Analyzer:
             except Exception as e:
                 logger.error(f"Error in batch analysis (usually JSON decode error from text truncation): {e}")
                 # Log the raw text so we can debug what went wrong.
-                if 'response' in locals() and hasattr(response, 'text'):
+                if response and hasattr(response, 'text'):
                     logger.error(f"Raw Response Text: {response.text[:500]} ... [truncated]")
                     
                 # Fallback for errors
@@ -158,8 +159,8 @@ class Analyzer:
             
             # Add a larger delay between chunks to safely avoid hitting the RPM (Requests Per Minute) limits.
             if i + CHUNK_SIZE < len(deals):
-                logger.info("Sleeping for 10 seconds before next chunk to respect API rate limits...")
-                time.sleep(10)
+                logger.info("Sleeping for 15 seconds before next chunk to respect API rate limits...")
+                time.sleep(15)
                 
         logger.info(f"Full batch analysis complete for {len(deals)} items.")
             
@@ -172,53 +173,57 @@ class Analyzer:
         return deals
 
     def _generate_with_fallback(self, prompt: str):
-        """Attempts to generate content with primary model, fallback and retry on 429."""
+        """Attempts to generate content with primary model, fallback and retry on 429/503."""
         import time
+        import re
         max_retries = 3
         
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"Generating content using {self.model_name} (Attempt {attempt+1}/{max_retries})...")
-                return self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json"
+        def _attempt(model_name: str):
+            for attempt in range(max_retries):
+                try:
+                    logger.info(f"Generating content using {model_name} (Attempt {attempt+1}/{max_retries})...")
+                    return self.client.models.generate_content(
+                        model=model_name,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_schema=BatchResponse,
+                        )
                     )
-                )
-            except Exception as e:
-                # Check for 429, Resource Exhausted, or 503 Service Unavailable (High Demand)
-                is_rate_limit = (
-                    "429" in str(e) 
-                    or "RESOURCE_EXHAUSTED" in str(e) 
-                    or "Too Many Requests" in str(e)
-                    or "503" in str(e)
-                    or "UNAVAILABLE" in str(e)
-                )
-                
-                if is_rate_limit:
-                    if attempt < max_retries - 1:
-                        wait_time = 30 * (attempt + 1) # wait 30s, then 60s
-                        logger.warning(f"Rate limit hit on {self.model_name}. Waiting {wait_time}s before retry...")
+                except Exception as e:
+                    is_rate_limit = (
+                        "429" in str(e) 
+                        or "RESOURCE_EXHAUSTED" in str(e) 
+                        or "Too Many Requests" in str(e)
+                        or "503" in str(e)
+                        or "UNAVAILABLE" in str(e)
+                    )
+                    
+                    if is_rate_limit and attempt < max_retries - 1:
+                        # Try to parse suggested retry delay
+                        match = re.search(r'retry in (\d+(?:\.\d+)?)s', str(e))
+                        if match:
+                            wait_time = float(match.group(1)) + 5  # Add 5s buffer
+                        else:
+                            wait_time = 30 * (attempt + 1) # wait 30s, then 60s
+                            
+                        logger.warning(f"Rate limit hit on {model_name}. Waiting {wait_time:.1f}s before retry...")
                         time.sleep(wait_time)
                         continue
-                    elif self.fallback_model_name:
-                        logger.warning(f"Rate limit hit on {self.model_name} after retries. Switching to fallback: {self.fallback_model_name}")
-                        try:
-                            return self.client.models.generate_content(
-                                model=self.fallback_model_name,
-                                contents=prompt,
-                                config=types.GenerateContentConfig(
-                                    response_mime_type="application/json"
-                                )
-                            )
-                        except Exception as fallback_e:
-                            logger.error(f"Fallback model also failed: {fallback_e}")
-                            raise fallback_e
                     else:
+                        if attempt == max_retries - 1 and is_rate_limit:
+                            logger.warning(f"Rate limit hit on {model_name} after {max_retries} retries.")
                         raise e
+            return None
 
-        return None
+        try:
+            return _attempt(self.model_name)
+        except Exception as primary_e:
+            if self.fallback_model_name:
+                logger.warning(f"Primary model {self.model_name} failed. Switching to fallback: {self.fallback_model_name}")
+                return _attempt(self.fallback_model_name)
+            else:
+                raise primary_e
 
     def _generate_embeddings(self, deals: List[Deal]):
         """Generates vector embeddings for hot deals."""
